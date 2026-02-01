@@ -39,6 +39,7 @@ else()
         add_executable(STLViewer
             ${PROJECT_SOURCES}
             glviewer.h glviewer.cpp
+            resource.qrc
         )
     endif()
 endif()
