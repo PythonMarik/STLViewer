@@ -46,28 +46,52 @@ void GLViewer::initializeGL()
 
     static const GLfloat cubeVertices[] = {
         // Front
-        -0.5f,-0.5f, 0.5f,   0.5f,-0.5f, 0.5f,   0.5f, 0.5f, 0.5f,
-        -0.5f,-0.5f, 0.5f,   0.5f, 0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,
+        -0.5f,-0.5f, 0.5f,   0,0,1,
+        0.5f,-0.5f, 0.5f,   0,0,1,
+        0.5f, 0.5f, 0.5f,   0,0,1,
+        -0.5f,-0.5f, 0.5f,   0,0,1,
+        0.5f, 0.5f, 0.5f,   0,0,1,
+        -0.5f, 0.5f, 0.5f,   0,0,1,
 
         // Back
-        0.5f,-0.5f,-0.5f,  -0.5f,-0.5f,-0.5f,  -0.5f, 0.5f,-0.5f,
-        0.5f,-0.5f,-0.5f,  -0.5f, 0.5f,-0.5f,   0.5f, 0.5f,-0.5f,
+        0.5f,-0.5f,-0.5f,   0,0,-1,
+        -0.5f,-0.5f,-0.5f,   0,0,-1,
+        -0.5f, 0.5f,-0.5f,   0,0,-1,
+        0.5f,-0.5f,-0.5f,   0,0,-1,
+        -0.5f, 0.5f,-0.5f,   0,0,-1,
+        0.5f, 0.5f,-0.5f,   0,0,-1,
 
         // Left
-        -0.5f,-0.5f,-0.5f,  -0.5f,-0.5f, 0.5f,  -0.5f, 0.5f, 0.5f,
-        -0.5f,-0.5f,-0.5f,  -0.5f, 0.5f, 0.5f,  -0.5f, 0.5f,-0.5f,
+        -0.5f,-0.5f,-0.5f,  -1,0,0,
+        -0.5f,-0.5f, 0.5f,  -1,0,0,
+        -0.5f, 0.5f, 0.5f,  -1,0,0,
+        -0.5f,-0.5f,-0.5f,  -1,0,0,
+        -0.5f, 0.5f, 0.5f,  -1,0,0,
+        -0.5f, 0.5f,-0.5f,  -1,0,0,
 
         // Right
-        0.5f,-0.5f, 0.5f,   0.5f,-0.5f,-0.5f,   0.5f, 0.5f,-0.5f,
-        0.5f,-0.5f, 0.5f,   0.5f, 0.5f,-0.5f,   0.5f, 0.5f, 0.5f,
+        0.5f,-0.5f, 0.5f,   1,0,0,
+        0.5f,-0.5f,-0.5f,   1,0,0,
+        0.5f, 0.5f,-0.5f,   1,0,0,
+        0.5f,-0.5f, 0.5f,   1,0,0,
+        0.5f, 0.5f,-0.5f,   1,0,0,
+        0.5f, 0.5f, 0.5f,   1,0,0,
 
         // Top
-        -0.5f, 0.5f, 0.5f,   0.5f, 0.5f, 0.5f,   0.5f, 0.5f,-0.5f,
-        -0.5f, 0.5f, 0.5f,   0.5f, 0.5f,-0.5f,  -0.5f, 0.5f,-0.5f,
+        -0.5f, 0.5f, 0.5f,   0,1,0,
+        0.5f, 0.5f, 0.5f,   0,1,0,
+        0.5f, 0.5f,-0.5f,   0,1,0,
+        -0.5f, 0.5f, 0.5f,   0,1,0,
+        0.5f, 0.5f,-0.5f,   0,1,0,
+        -0.5f, 0.5f,-0.5f,   0,1,0,
 
         // Bottom
-        -0.5f,-0.5f,-0.5f,   0.5f,-0.5f,-0.5f,   0.5f,-0.5f, 0.5f,
-        -0.5f,-0.5f,-0.5f,   0.5f,-0.5f, 0.5f,  -0.5f,-0.5f, 0.5f
+        -0.5f,-0.5f,-0.5f,   0,-1,0,
+        0.5f,-0.5f,-0.5f,   0,-1,0,
+        0.5f,-0.5f, 0.5f,   0,-1,0,
+        -0.5f,-0.5f,-0.5f,   0,-1,0,
+        0.5f,-0.5f, 0.5f,   0,-1,0,
+        -0.5f,-0.5f, 0.5f,   0,-1,0
     };
 
     // VAO
@@ -80,8 +104,12 @@ void GLViewer::initializeGL()
     m_VBO.allocate(cubeVertices, sizeof(cubeVertices));
 
     // POS
-    m_program.setAttributeBuffer(0, GL_FLOAT, 0, 3, 3 * sizeof(GLfloat));
+    m_program.setAttributeBuffer(0, GL_FLOAT, 0, 3, 6 * sizeof(GLfloat));
     m_program.enableAttributeArray(0);
+
+    // NORMALS
+    m_program.setAttributeBuffer(1, GL_FLOAT, 3 * sizeof(GLfloat), 3, 6 * sizeof(GLfloat));
+    m_program.enableAttributeArray(1);
 }
 
 void GLViewer::resizeGL(int w, int h)
@@ -116,10 +144,20 @@ void GLViewer::paintGL()
     m_view.lookAt(eye, center, up);
 
     // MVP
-    QMatrix4x4 mvp = m_projection * m_view * m_model;
-
     m_program.bind();
-    m_program.setUniformValue("mvp", mvp);
+    m_program.setUniformValue("model", m_model);
+    m_program.setUniformValue("view", m_view);
+    m_program.setUniformValue("projection", m_projection);
+
+    // light
+    QVector3D objectColor(0.6f, 0.584f, 0.549f);
+    QVector3D lightColor(1.0f, 1.0f, 1.0f);
+    QVector3D lightPos(5.0f, 5.0f, 5.0f);
+    m_program.setUniformValue("objectColor", objectColor);
+    m_program.setUniformValue("lightColor", lightColor);
+    m_program.setUniformValue("lightPos", lightPos);
+    m_program.setUniformValue("viewPos", eye);
+
     m_VAO.bind();
     glDrawArrays(GL_TRIANGLES, 0, 36);
     m_program.release();
